@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Password Security Analyzer{% endblock %} | CipherHash Lab</title>
+  <meta name="description" content="{% block meta_desc %}Academic cryptography project demonstrating password security, SHA-256 hashing, avalanche effect, and PBKDF2 key derivation.{% endblock %}">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- ===== NAV ===== -->
+  <header class="navbar" id="mainNav">
+    <div class="container nav-container">
+
+      <!-- Brand -->
+      <a href="{{ url_for('index') }}" class="brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <span class="brand-text">Cipher<span class="accent">Hash</span></span>
+      </a>
+
+      <!-- Desktop Menu -->
+      <nav>
+        <ul class="nav-menu" id="navMenu">
+          <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Dashboard</a></li>
+          <li><a href="{{ url_for('analyzer') }}" class="nav-link {% if request.endpoint == 'analyzer' %}active{% endif %}">Analyzer</a></li>
+          <li><a href="{{ url_for('hash_generator') }}" class="nav-link {% if request.endpoint == 'hash_generator' %}active{% endif %}">Hash Lab</a></li>
+          <li><a href="{{ url_for('avalanche') }}" class="nav-link {% if request.endpoint == 'avalanche' %}active{% endif %}">Avalanche</a></li>
+          <li><a href="{{ url_for('register') }}" class="nav-link {% if request.endpoint == 'register' %}active{% endif %}">Register</a></li>
+          <li><a href="{{ url_for('login') }}" class="nav-link {% if request.endpoint == 'login' %}active{% endif %}">Login Demo</a></li>
+          <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Security Stats</a></li>
+          <li><a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">Learn</a></li>
+        </ul>
+      </nav>
+
+      <!-- Nav Actions -->
+      <div class="nav-actions">
+        <div class="privacy-pill" title="All cryptographic operations run server-side via Python hashlib. No external APIs.">
+          <span class="pulse-dot"></span> 100% Local
+        </div>
+        <button class="icon-btn theme-toggle" id="themeToggle" aria-label="Toggle Theme" title="Toggle Light / Dark Mode">
+          <svg id="themeIconSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg id="themeIconMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Open Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== PAGE CONTENT ===== -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <div class="brand-icon sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <span>Password Security Analyzer Using Cryptographic Hash Functions</span>
+      </div>
+      <div class="footer-meta">
+        <span>B.Tech Computer Science (Cyber Security) | Academic Project 2025–26</span>
+        <span class="footer-sep">•</span>
+        <span>Powered by Python Flask & hashlib (PBKDF2-HMAC-SHA-256)</span>
+      </div>
+      <div class="footer-notice">
+        🛡️ All cryptographic operations run locally. Passwords are never stored in plaintext and are never transmitted to external services.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Base JS -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

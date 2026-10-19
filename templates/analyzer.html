@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% block title %}Password Strength Analyzer{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <span class="section-tag">Module 01 — Real-Time Cryptanalysis</span>
+    <h1 class="page-title">Password Strength Analyzer</h1>
+    <p class="page-desc">
+      Evaluates password security using Shannon information entropy, character pool analysis, pattern detection,
+      and theoretical brute-force resistance estimation. All processing occurs server-side via Python.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="analyzer-layout">
+
+      <!-- Left: Input Column -->
+      <div class="analyzer-col-main">
+        <div class="card">
+          <!-- Password Field -->
+          <div class="form-group">
+            <label for="pwdInput" class="form-label">Test Password</label>
+            <div class="input-wrapper">
+              <input type="password" id="pwdInput" class="input-field mono"
+                     placeholder="Type or paste a password to analyze..."
+                     autocomplete="off" spellcheck="false"
+                     aria-describedby="pwdInputHelp">
+              <div class="input-icon-group">
+                <button class="icon-btn" id="togglePwd" type="button" title="Show/Hide" aria-label="Toggle password visibility">
+                  <svg id="eyeOpen" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg id="eyeClose" style="display:none" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+                <button class="icon-btn" id="clearPwd" type="button" title="Clear" aria-label="Clear input">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            </div>
+            <p id="pwdInputHelp" class="form-hint">Your password is sent to the local Flask server for analysis only. It is never stored.</p>
+          </div>
+
+          <!-- Strength Meter -->
+          <div class="strength-meter-wrap" id="strengthMeterWrap">
+            <div class="meter-header">
+              <span class="meter-label">Password Strength</span>
+              <span class="meter-badge" id="meterBadge">—</span>
+            </div>
+            <div class="meter-track" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" id="meterTrack">
+              <div class="meter-fill" id="meterFill" style="width: 0%;"></div>
+            </div>
+            <div class="meter-segs" aria-hidden="true">
+              <span id="s1" class="seg"></span>
+              <span id="s2" class="seg"></span>
+              <span id="s3" class="seg"></span>
+              <span id="s4" class="seg"></span>
+              <span id="s5" class="seg"></span>
+            </div>
+          </div>
+
+          <!-- Criteria Checks -->
+          <div class="criteria-grid" id="criteriaGrid">
+            <div class="check-item" id="chkLength">
+              <span class="check-icon neutral">–</span>
+              <span class="check-text">At least 12 characters</span>
+            </div>
+            <div class="check-item" id="chkUpper">
+              <span class="check-icon neutral">–</span>
+              <span class="check-text">Uppercase letter (A–Z)</span>
+            </div>
+            <div class="check-item" id="chkLower">
+              <span class="check-icon neutral">–</span>
+              <span class="check-text">Lowercase letter (a–z)</span>
+            </div>
+            <div class="check-item" id="chkDigit">
+              <span class="check-icon neutral">–</span>
+              <span class="check-text">Numeric digit (0–9)</span>
+            </div>
+            <div class="check-item" id="chkSymbol">
+              <span class="check-icon neutral">–</span>
+              <span class="check-text">Special symbol (!@#...)</span>
+            </div>
+          </div>
+
+          <!-- Pattern Warnings -->
+          <div id="patternWarnings"></div>
+        </div>
+
+        <!-- Entropy Card -->
+        <div class="card entropy-card">
+          <div class="entropy-flex">
+            <div>
+              <div class="entropy-value" id="entropyVal">0.0 <span class="entropy-unit">bits</span></div>
+              <div class="entropy-label">Shannon Information Entropy</div>
+            </div>
+            <div class="formula-chip" id="formulaChip">E = 0 × log₂(0) = 0 bits</div>
+          </div>
+        </div>
+
+        <!-- Crack Times -->
+        <div class="card">
+          <h3 class="card-title">Estimated Brute-Force Resistance</h3>
+          <p class="card-desc">Time to exhaust 50% of the key space at each threat speed:</p>
+          <div class="crack-grid">
+            <div class="crack-card">
+              <div class="crack-icon">🌐</div>
+              <div class="crack-scenario">Online Throttled<br><small>100 guesses / sec</small></div>
+              <div class="crack-time" id="crackOnline">—</div>
+            </div>
+            <div class="crack-card">
+              <div class="crack-icon">⚡</div>
+              <div class="crack-scenario">Online Fast<br><small>10,000 guesses / sec</small></div>
+              <div class="crack-time" id="crackOnlineFast">—</div>
+            </div>
+            <div class="crack-card">
+              <div class="crack-icon">🔥</div>
+              <div class="crack-scenario">Offline GPU Rig<br><small>100 billion / sec (SHA-256)</small></div>
+              <div class="crack-time" id="crackGpu">—</div>
+            </div>
+            <div class="crack-card">
+              <div class="crack-icon">🛡️</div>
+              <div class="crack-scenario">Offline PBKDF2<br><small>~10,000 / sec (hardened)</small></div>
+              <div class="crack-time" id="crackPbkdf2">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Suggestions Column -->
+      <div class="analyzer-col-side">
+        <div class="card sticky-card">
+          <h3 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            Security Recommendations
+          </h3>
+          <ul class="suggestions-list" id="suggestionsList">
+            <li class="suggestion-item muted">Enter a password to receive tailored recommendations.</li>
+          </ul>
+
+          <div class="info-box" style="margin-top: 20px;">
+            <strong>⚠️ Disclaimer</strong><br>
+            Password strength scores are theoretical estimates based on information entropy. A high score does not
+            guarantee security if the password appears in breach databases or follows predictable patterns.
+          </div>
+
+          <div class="info-box success-box" style="margin-top: 14px;">
+            <strong>✅ Best Practices</strong>
+            <ul style="margin-top: 6px; padding-left: 18px; font-size: 0.85rem;">
+              <li>Use a password manager (Bitwarden, 1Password)</li>
+              <li>Enable TOTP-based two-factor authentication</li>
+              <li>Use unique passwords per service</li>
+              <li>Prefer 4-word random passphrases for memorability</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// ---- Analyzer Page Logic ----
+let debounceTimer = null;
+
+document.getElementById('pwdInput').addEventListener('input', function() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => analyzePassword(this.value), 220);
+});
+
+document.getElementById('togglePwd').addEventListener('click', function() {
+  const input = document.getElementById('pwdInput');
+  const isPass = input.type === 'password';
+  input.type = isPass ? 'text' : 'password';
+  document.getElementById('eyeOpen').style.display = isPass ? 'none' : 'block';
+  document.getElementById('eyeClose').style.display = isPass ? 'block' : 'none';
+});
+
+document.getElementById('clearPwd').addEventListener('click', function() {
+  document.getElementById('pwdInput').value = '';
+  analyzePassword('');
+});
+
+async function analyzePassword(pwd) {
+  const res = await apiPost('/api/analyze', { password: pwd });
+  if (!res) return;
+
+  // Strength Meter
+  const scoreMap = [0, 20, 40, 60, 80, 100];
+  const colorMap = {
+    'Very Weak': '#ef4444', 'Weak': '#f97316',
+    'Moderate': '#eab308', 'Strong': '#22c55e', 'Very Strong': '#00f2fe', 'Empty': '#475569'
+  };
+  const fill = document.getElementById('meterFill');
+  const badge = document.getElementById('meterBadge');
+  fill.style.width = scoreMap[res.score] + '%';
+  fill.style.background = colorMap[res.strength_label] || '#475569';
+  badge.textContent = res.strength_label;
+  badge.style.color = colorMap[res.strength_label] || '#94a3b8';
+
+  // Segment highlights
+  for (let i = 1; i <= 5; i++) {
+    const seg = document.getElementById('s' + i);
+    seg.className = 'seg ' + (i <= res.score ? 'active' : '');
+    if (i <= res.score) seg.style.background = colorMap[res.strength_label];
+    else seg.style.background = '';
+  }
+
+  // Criteria
+  const map = {
+    'chkLength': res.criteria.has_min_length,
+    'chkUpper':  res.criteria.has_upper,
+    'chkLower':  res.criteria.has_lower,
+    'chkDigit':  res.criteria.has_digit,
+    'chkSymbol': res.criteria.has_symbol,
+  };
+  for (const [id, pass] of Object.entries(map)) {
+    const el = document.getElementById(id);
+    const icon = el.querySelector('.check-icon');
+    if (pwd.length === 0) {
+      el.className = 'check-item';
+      icon.className = 'check-icon neutral';
+      icon.textContent = '–';
+    } else if (pass) {
+      el.className = 'check-item valid';
+      icon.className = 'check-icon pass';
+      icon.textContent = '✓';
+    } else {
+      el.className = 'check-item invalid';
+      icon.className = 'check-icon fail';
+      icon.textContent = '✕';
+    }
+  }
+
+  // Pattern warnings
+  const pArea = document.getElementById('patternWarnings');
+  pArea.innerHTML = res.patterns.map(p =>
+    `<div class="pattern-alert ${p.type}">
+      <span>⚠</span>
+      <span>${escHtml(p.text)}</span>
+    </div>`
+  ).join('');
+
+  // Entropy
+  document.getElementById('entropyVal').innerHTML =
+    `${res.entropy.toFixed(1)} <span class="entropy-unit">bits</span>`;
+  document.getElementById('formulaChip').textContent = res.entropy_formula;
+
+  // Crack times
+  document.getElementById('crackOnline').textContent = res.crack_times.online_throttled;
+  document.getElementById('crackOnlineFast').textContent = res.crack_times.online_fast;
+  document.getElementById('crackGpu').textContent = res.crack_times.offline_gpu;
+  document.getElementById('crackPbkdf2').textContent = res.crack_times.offline_pbkdf2;
+
+  // Suggestions
+  const sList = document.getElementById('suggestionsList');
+  sList.innerHTML = res.suggestions.map(s =>
+    `<li class="suggestion-item">${escHtml(s)}</li>`
+  ).join('');
+}
+</script>
+{% endblock %}

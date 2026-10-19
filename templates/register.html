@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block title %}Secure Registration Demo{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <span class="section-tag">Module 04 & 05 — PBKDF2-HMAC-SHA-256</span>
+    <h1 class="page-title">Secure Registration Demo</h1>
+    <p class="page-desc">
+      Register a demo account to observe how PBKDF2-HMAC-SHA-256 with a unique random salt
+      protects passwords at rest. The server derives a cryptographic key and stores only the
+      derived hash — your plaintext password is immediately discarded after derivation.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="grid-2-1">
+
+      <!-- Registration Form -->
+      <div class="card">
+        <h2 class="card-title">Create Demo Account</h2>
+
+        <form id="registerForm" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+          <div class="form-group">
+            <label for="regUsername" class="form-label">Username</label>
+            <input type="text" id="regUsername" name="username" class="input-field"
+                   placeholder="e.g. alice_demo"
+                   pattern="[a-zA-Z0-9_\-]{3,32}"
+                   minlength="3" maxlength="32"
+                   required autocomplete="username"
+                   aria-describedby="regUsernameHelp">
+            <p id="regUsernameHelp" class="form-hint">3–32 characters. Letters, numbers, underscores, and hyphens only.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="regPassword" class="form-label">Password</label>
+            <div class="input-wrapper">
+              <input type="password" id="regPassword" name="password" class="input-field mono"
+                     placeholder="Enter a password (min. 8 characters)"
+                     minlength="8" maxlength="256"
+                     required autocomplete="new-password"
+                     aria-describedby="regPasswordHelp">
+              <div class="input-icon-group">
+                <button class="icon-btn" id="toggleRegPwd" type="button" aria-label="Toggle password visibility">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="mini-meter-wrap">
+              <div class="mini-meter-fill" id="regMeterFill" style="width:0%;"></div>
+            </div>
+            <p id="regPasswordHelp" class="form-hint">Never store real passwords here. This is a demonstration only.</p>
+          </div>
+
+          <button type="submit" class="btn btn-primary full-width" id="registerBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Register with PBKDF2-HMAC-SHA-256
+          </button>
+        </form>
+
+        <!-- Result -->
+        <div id="registerResult" style="display:none; margin-top: 24px;"></div>
+
+        <!-- Process Timeline (reveals on success) -->
+        <div id="registrationProcess" style="display:none; margin-top: 24px;">
+          <h3 class="card-title" style="font-size: 0.95rem;">How Your Password Was Protected</h3>
+          <div class="process-steps">
+            <div class="process-step done">
+              <div class="step-num">1</div>
+              <div>
+                <strong>Input Validated</strong>
+                <p>Username format and password length checked server-side.</p>
+              </div>
+            </div>
+            <div class="process-step done">
+              <div class="step-num">2</div>
+              <div>
+                <strong>Unique Salt Generated</strong>
+                <p>16 random bytes from <code>secrets.token_hex(16)</code> — CSPRNG. Salt: <code id="regSaltPreview"></code></p>
+              </div>
+            </div>
+            <div class="process-step done">
+              <div class="step-num">3</div>
+              <div>
+                <strong>PBKDF2-HMAC-SHA-256 Applied</strong>
+                <p>Password + Salt processed through <strong>100,000 HMAC-SHA-256 rounds</strong> (key stretching). This takes ~50ms per attempt — making brute-force 100,000× harder.</p>
+              </div>
+            </div>
+            <div class="process-step done">
+              <div class="step-num">4</div>
+              <div>
+                <strong>Only Hash + Salt Stored</strong>
+                <p>Plaintext password is <strong>never written to disk</strong>. SQLite stores: username, derived hash, salt, algorithm, iteration count, timestamp.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Educational Side -->
+      <div>
+        <div class="card edu-side-card">
+          <div class="edu-icon-lg">🧂</div>
+          <h3 class="edu-card-title">Why PBKDF2 + Unique Salt?</h3>
+
+          <p class="edu-body">
+            A <strong>Rainbow Table</strong> is a precomputed lookup database mapping millions of
+            plaintext passwords to their SHA-256 hashes. Without a salt, an attacker who leaks
+            your database can instantly crack any password with a table lookup.
+          </p>
+
+          <div class="edu-divider"></div>
+
+          <div class="edu-comparison">
+            <div class="edu-compare-item bad">
+              <strong>❌ Unsafe: SHA-256 Alone</strong>
+              <code>H = SHA256("password123")</code>
+              <ul>
+                <li>Rainbow table instantly cracks in &lt;1ms</li>
+                <li>GPU: ~100 billion guesses/sec</li>
+                <li>Two users with same password → same hash</li>
+              </ul>
+            </div>
+            <div class="edu-compare-item good">
+              <strong>✅ Safe: PBKDF2 + Salt</strong>
+              <code>H = PBKDF2(pwd, salt, 100000)</code>
+              <ul>
+                <li>Rainbow tables useless (unique salt per user)</li>
+                <li>~10,000 guesses/sec (100,000× slower)</li>
+                <li>Identical passwords → completely different hashes</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="edu-divider"></div>
+
+          <h4 class="edu-subtitle">Algorithm Parameters Used</h4>
+          <div class="param-table">
+            <div class="param-row"><span>Hash Function</span><strong>SHA-256</strong></div>
+            <div class="param-row"><span>Iterations (Work Factor)</span><strong>100,000</strong></div>
+            <div class="param-row"><span>Salt Length</span><strong>16 bytes (128-bit)</strong></div>
+            <div class="param-row"><span>Output Key Length</span><strong>32 bytes (256-bit)</strong></div>
+            <div class="param-row"><span>Comparison Method</span><strong>hmac.compare_digest (constant-time)</strong></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Toggle password visibility
+document.getElementById('toggleRegPwd').addEventListener('click', function() {
+  const inp = document.getElementById('regPassword');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+});
+
+// Mini strength meter on registration form
+document.getElementById('regPassword').addEventListener('input', async function() {
+  const res = await apiPost('/api/analyze', { password: this.value });
+  if (!res) return;
+  const fill = document.getElementById('regMeterFill');
+  const colorMap = { 1: '#ef4444', 2: '#f97316', 3: '#eab308', 4: '#22c55e', 5: '#00f2fe' };
+  fill.style.width = (res.score * 20) + '%';
+  fill.style.background = colorMap[res.score] || '#475569';
+});
+
+// Registration form submit
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const username = document.getElementById('regUsername').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const csrf = this.querySelector('[name=csrf_token]').value;
+
+  if (!username || !password) {
+    showToast('Please fill in all fields.', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('registerBtn');
+  btn.disabled = true;
+  btn.textContent = 'Registering...';
+
+  const res = await apiPost('/api/register', { username, password, csrf_token: csrf });
+
+  btn.disabled = false;
+  btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Register with PBKDF2-HMAC-SHA-256`;
+
+  const resultEl = document.getElementById('registerResult');
+  resultEl.style.display = 'block';
+
+  if (res && res.success) {
+    resultEl.innerHTML = `
+      <div class="alert-box success">
+        <span class="alert-icon">✓</span>
+        <div>
+          <strong>Registration Successful!</strong>
+          <p>Account "<strong>${escHtml(username)}</strong>" created using <code>PBKDF2-HMAC-SHA-256</code> with ${res.iterations.toLocaleString()} iterations.<br>
+          Salt preview: <code>${escHtml(res.salt_preview)}</code></p>
+        </div>
+      </div>`;
+    document.getElementById('regSaltPreview').textContent = res.salt_preview;
+    document.getElementById('registrationProcess').style.display = 'block';
+    document.getElementById('regPassword').value = '';
+    showToast('Account registered successfully!');
+  } else {
+    const msg = (res && res.message) ? res.message : 'Registration failed. Please try again.';
+    resultEl.innerHTML = `
+      <div class="alert-box danger">
+        <span class="alert-icon">✕</span>
+        <div><strong>Registration Failed</strong><p>${escHtml(msg)}</p></div>
+      </div>`;
+    showToast(msg, 'danger');
+  }
+});
+</script>
+{% endblock %}

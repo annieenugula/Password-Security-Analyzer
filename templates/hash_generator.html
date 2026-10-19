@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}SHA-256 Hash Generator{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <span class="section-tag">Module 02 — One-Way Digest</span>
+    <h1 class="page-title">SHA-256 Hash Generator</h1>
+    <p class="page-desc">
+      Compute the deterministic, one-way SHA-256 digest of any text.
+      Demonstrates that hashing is <strong>not encryption</strong> — it is a mathematically irreversible
+      mapping from arbitrary input to a fixed 256-bit fingerprint.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="grid-2-1">
+
+      <!-- Generator Panel -->
+      <div>
+        <div class="card">
+          <h2 class="card-title">Input Text</h2>
+          <div class="form-group">
+            <label for="hashInput" class="form-label">Sample Input String</label>
+            <textarea id="hashInput" class="input-field mono" rows="4"
+                      placeholder="Enter any text to hash (e.g. 'Password123')"
+                      maxlength="1024" aria-describedby="hashInputHelp">Password123</textarea>
+            <p id="hashInputHelp" class="form-hint">
+              Max 1024 characters. SHA-256 will accept any byte sequence.
+              <span id="charCount" style="float:right;">11 / 1024</span>
+            </p>
+          </div>
+
+          <div class="button-row">
+            <button class="btn btn-primary" id="generateHashBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+              Compute SHA-256 Hash
+            </button>
+            <button class="btn btn-secondary" id="clearHashBtn">Clear</button>
+          </div>
+
+          <!-- Output -->
+          <div id="hashOutputSection" style="display:none; margin-top: 28px;">
+            <hr class="divider">
+            <div class="hash-meta-row">
+              <div class="hash-meta-item">
+                <span class="meta-label">Algorithm</span>
+                <span class="meta-value mono" id="outAlgo">SHA-256</span>
+              </div>
+              <div class="hash-meta-item">
+                <span class="meta-label">Digest Length</span>
+                <span class="meta-value mono" id="outBitLen">256 bits</span>
+              </div>
+              <div class="hash-meta-item">
+                <span class="meta-label">Hex Characters</span>
+                <span class="meta-value mono" id="outHexLen">64</span>
+              </div>
+            </div>
+
+            <div class="hash-output-block">
+              <div class="hash-output-label">SHA-256 Hexadecimal Digest:</div>
+              <div class="hash-output-row">
+                <code class="hash-value" id="hashOutput" aria-label="SHA-256 hash output">—</code>
+                <button class="icon-btn copy-btn" id="copyHashBtn" title="Copy to clipboard" aria-label="Copy hash">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Hash Properties Demo -->
+            <div class="info-box" style="margin-top: 16px;">
+              <strong>🔍 Hash Properties Demonstrated:</strong>
+              <ul style="margin-top: 8px; padding-left: 18px; font-size: 0.85rem;">
+                <li><strong>Determinism:</strong> Submit the same input again — the hash will be identical.</li>
+                <li><strong>Fixed Output Size:</strong> Always 256 bits (64 hex chars), regardless of input length.</li>
+                <li><strong>One-Way (Pre-image resistance):</strong> There is no mathematical inverse to recover the original text from the digest.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Determinism Test -->
+        <div class="card" style="margin-top: 24px;">
+          <h3 class="card-title">Determinism Comparison</h3>
+          <p class="card-desc">Enter a second input to verify that identical inputs produce identical digests, and even minor changes produce completely different ones.</p>
+          <div class="form-group">
+            <label for="hashInput2" class="form-label">Second Input String</label>
+            <input type="text" id="hashInput2" class="input-field mono"
+                   placeholder="e.g. 'Password123' (try identical then differ by 1 char)">
+          </div>
+          <button class="btn btn-secondary" id="compareHashBtn">Compare Hashes</button>
+
+          <div id="compareResult" style="display:none; margin-top: 20px;">
+            <div class="compare-row">
+              <div class="compare-item">
+                <div class="compare-label" id="cmpLabel1">Input 1</div>
+                <code class="hash-value sm" id="cmpHash1"></code>
+              </div>
+              <div class="compare-item">
+                <div class="compare-label" id="cmpLabel2">Input 2</div>
+                <code class="hash-value sm" id="cmpHash2"></code>
+              </div>
+            </div>
+            <div class="compare-verdict" id="compareVerdict"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Educational Side Panel -->
+      <div>
+        <div class="card edu-side-card">
+          <div class="edu-icon-lg">🔒</div>
+          <h3 class="edu-card-title">What is SHA-256?</h3>
+          <p class="edu-body">
+            SHA-256 (Secure Hash Algorithm 256) is a member of the SHA-2 family, standardized by NIST (FIPS 180-4).
+            It maps any sequence of bytes to a deterministic, fixed-length 256-bit output through a series
+            of modular arithmetic, logical functions, and compression operations.
+          </p>
+
+          <div class="edu-divider"></div>
+          <h4 class="edu-subtitle">Key Properties</h4>
+          <div class="property-list">
+            <div class="property-item">
+              <span class="property-tag">Determinism</span>
+              <span>Same input → always same digest.</span>
+            </div>
+            <div class="property-item">
+              <span class="property-tag">Pre-image Resistance</span>
+              <span>Computationally infeasible to reverse H(m) → m.</span>
+            </div>
+            <div class="property-item">
+              <span class="property-tag">Collision Resistance</span>
+              <span>Infeasible to find m₁ ≠ m₂ where H(m₁) = H(m₂).</span>
+            </div>
+            <div class="property-item">
+              <span class="property-tag">Avalanche Effect</span>
+              <span>1-bit input change → ~50% of output bits change.</span>
+            </div>
+          </div>
+
+          <div class="edu-divider"></div>
+          <div class="warning-box">
+            <strong>⚠️ SHA-256 Alone Is NOT Safe for Password Storage</strong><br>
+            SHA-256 can be computed at over 100,000,000,000 hashes per second on a GPU cluster.
+            Without salting and key stretching (PBKDF2, bcrypt, Argon2),
+            an attacker can precompute billions of hashes and crack most passwords in seconds.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const hashInputEl = document.getElementById('hashInput');
+const charCountEl = document.getElementById('charCount');
+
+hashInputEl.addEventListener('input', function() {
+  charCountEl.textContent = `${this.value.length} / 1024`;
+});
+
+document.getElementById('generateHashBtn').addEventListener('click', async function() {
+  const text = hashInputEl.value;
+  const res = await apiPost('/api/hash', { text });
+  if (!res) return;
+
+  document.getElementById('outAlgo').textContent = res.algorithm;
+  document.getElementById('outBitLen').textContent = `${res.bit_length} bits`;
+  document.getElementById('outHexLen').textContent = `${res.char_length}`;
+  document.getElementById('hashOutput').textContent = res.hex_digest;
+  document.getElementById('hashOutputSection').style.display = 'block';
+});
+
+document.getElementById('clearHashBtn').addEventListener('click', function() {
+  hashInputEl.value = '';
+  charCountEl.textContent = '0 / 1024';
+  document.getElementById('hashOutputSection').style.display = 'none';
+  document.getElementById('compareResult').style.display = 'none';
+});
+
+document.getElementById('copyHashBtn').addEventListener('click', function() {
+  const hash = document.getElementById('hashOutput').textContent;
+  navigator.clipboard.writeText(hash).then(() => showToast('Hash copied to clipboard!'));
+});
+
+document.getElementById('compareHashBtn').addEventListener('click', async function() {
+  const t1 = hashInputEl.value;
+  const t2 = document.getElementById('hashInput2').value;
+  if (!t1 || !t2) { showToast('Enter text in both fields to compare.', 'warning'); return; }
+
+  const [r1, r2] = await Promise.all([
+    apiPost('/api/hash', { text: t1 }),
+    apiPost('/api/hash', { text: t2 })
+  ]);
+  if (!r1 || !r2) return;
+
+  document.getElementById('cmpLabel1').textContent = `"${t1.slice(0,30)}${t1.length>30?'…':''}"`;
+  document.getElementById('cmpLabel2').textContent = `"${t2.slice(0,30)}${t2.length>30?'…':''}"`;
+  document.getElementById('cmpHash1').textContent = r1.hex_digest;
+  document.getElementById('cmpHash2').textContent = r2.hex_digest;
+
+  const verdict = document.getElementById('compareVerdict');
+  if (r1.hex_digest === r2.hex_digest) {
+    verdict.innerHTML = '<span class="verdict match">✓ Identical hashes — Determinism confirmed!</span>';
+  } else {
+    verdict.innerHTML = '<span class="verdict mismatch">⚡ Different hashes — Even a minor input change produces a completely different digest (Avalanche Effect).</span>';
+  }
+  document.getElementById('compareResult').style.display = 'block';
+});
+</script>
+{% endblock %}

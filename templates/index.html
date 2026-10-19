@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      B.Tech Cyber Security — Academic Capstone Project
+    </div>
+    <h1 class="hero-title">
+      Password Security Analyzer<br>
+      <span class="gradient-text">Using Cryptographic Hash Functions</span>
+    </h1>
+    <p class="hero-subtitle">
+      An interactive laboratory demonstrating information entropy, SHA-256 diffusion, PBKDF2 key stretching,
+      Rainbow Table defenses, and authenticated login simulation — all running locally on Python Flask.
+    </p>
+    <div class="hero-cta-group">
+      <a href="{{ url_for('analyzer') }}" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        Launch Analyzer
+      </a>
+      <a href="{{ url_for('avalanche') }}" class="btn btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Avalanche Visualizer
+      </a>
+      <a href="{{ url_for('about') }}" class="btn btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        Cryptography Guide
+      </a>
+    </div>
+    <!-- Privacy Notice -->
+    <div class="privacy-alert-box">
+      <span class="privacy-icon">🛡️</span>
+      <div>
+        <strong>Zero-Knowledge Architecture — Your Password Never Leaves This Server</strong>
+        All cryptographic operations use Python's standard <code>hashlib</code>, <code>secrets</code>, and <code>hmac</code> libraries.
+        No plaintext passwords are stored, logged, or transmitted. Hashes and salts are stored only in a local SQLite database on your machine.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Module Cards -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Platform Modules</span>
+      <h2 class="section-title">Six Interactive Cryptographic Modules</h2>
+    </div>
+    <div class="modules-grid">
+
+      <a href="{{ url_for('analyzer') }}" class="module-card">
+        <div class="module-icon" style="background: rgba(239,68,68,0.15); color: #f87171;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>
+        <h3>Password Strength Analyzer</h3>
+        <p>Real-time entropy calculation (E = L × log₂R), criteria checklist, pattern detection, and estimated GPU brute-force crack times.</p>
+        <span class="module-tag">Module 1</span>
+      </a>
+
+      <a href="{{ url_for('hash_generator') }}" class="module-card">
+        <div class="module-icon" style="background: rgba(56,189,248,0.15); color: #38bdf8;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+        </div>
+        <h3>SHA-256 Hash Generator</h3>
+        <p>Generate the deterministic 256-bit SHA-256 digest of any sample input. Demonstrates one-way irreversibility and determinism.</p>
+        <span class="module-tag">Module 2</span>
+      </a>
+
+      <a href="{{ url_for('avalanche') }}" class="module-card">
+        <div class="module-icon" style="background: rgba(168,85,247,0.15); color: #c084fc;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <h3>Avalanche Effect Visualizer</h3>
+        <p>Compare two near-identical strings. Visualize how a single character change flips ~50% of all 256 output bits (Strict Avalanche Criterion).</p>
+        <span class="module-tag">Module 3</span>
+      </a>
+
+      <a href="{{ url_for('register') }}" class="module-card">
+        <div class="module-icon" style="background: rgba(16,185,129,0.15); color: #34d399;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        </div>
+        <h3>Secure Registration Demo</h3>
+        <p>Register a demo account using PBKDF2-HMAC-SHA-256 with a unique random salt. Observe key stretching via configurable iteration count.</p>
+        <span class="module-tag">Module 4 & 5</span>
+      </a>
+
+      <a href="{{ url_for('login') }}" class="module-card">
+        <div class="module-icon" style="background: rgba(245,158,11,0.15); color: #fbbf24;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h3>Password Verification Demo</h3>
+        <p>Simulate server-side login: re-derive the hash with stored salt and verify using constant-time comparison (hmac.compare_digest).</p>
+        <span class="module-tag">Module 5</span>
+      </a>
+
+      <a href="{{ url_for('dashboard') }}" class="module-card">
+        <div class="module-icon" style="background: rgba(20,184,166,0.15); color: #2dd4bf;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h3>Security Dashboard</h3>
+        <p>Aggregated non-sensitive authentication event metrics: registration count, login successes/failures, and algorithm configuration.</p>
+        <span class="module-tag">Module 6</span>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- Live Stats Strip -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="stats-strip">
+      <div class="stat-item">
+        <span class="stat-val" id="statUsers">{{ total_users }}</span>
+        <span class="stat-label">Demo Accounts</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val">PBKDF2</span>
+        <span class="stat-label">Password Algorithm</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val">100,000</span>
+        <span class="stat-label">HMAC Iterations</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val">SHA-256</span>
+        <span class="stat-label">Underlying PRF</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val">256-bit</span>
+        <span class="stat-label">Key / Digest Length</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val">{{ stats.successful_logins or 0 }}</span>
+        <span class="stat-label">Successful Logins</span>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

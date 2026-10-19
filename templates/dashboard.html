@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Security Dashboard{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <span class="section-tag">Module 06 — Security Metrics</span>
+    <h1 class="page-title">Security Dashboard</h1>
+    <p class="page-desc">
+      Aggregated, non-sensitive authentication event statistics. No passwords, hashes, or salts are ever displayed here.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+
+    <!-- KPI Grid -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon" style="color: #38bdf8;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="kpi-value" id="kpiUsers">{{ total_users }}</div>
+        <div class="kpi-label">Demo Accounts Registered</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon" style="color: #34d399;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="kpi-value" id="kpiLogins">{{ stats.successful_logins or 0 }}</div>
+        <div class="kpi-label">Successful Login Attempts</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon" style="color: #f87171;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div class="kpi-value" id="kpiFailed">{{ stats.failed_logins or 0 }}</div>
+        <div class="kpi-label">Failed Login Attempts</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon" style="color: #c084fc;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="kpi-value" id="kpiTotal">{{ stats.total_events or 0 }}</div>
+        <div class="kpi-label">Total Authentication Events</div>
+      </div>
+    </div>
+
+    <!-- Algorithm Configuration Card -->
+    <div class="card" style="margin-top: 28px;">
+      <h3 class="card-title">Active Security Configuration</h3>
+      <div class="config-grid">
+        <div class="config-item">
+          <span class="config-key">Password Algorithm</span>
+          <span class="config-val mono success-text">PBKDF2-HMAC-SHA-256</span>
+        </div>
+        <div class="config-item">
+          <span class="config-key">HMAC Work Factor (Iterations)</span>
+          <span class="config-val mono" id="cfgIterations">100,000</span>
+        </div>
+        <div class="config-item">
+          <span class="config-key">Pseudorandom Function</span>
+          <span class="config-val mono">HMAC-SHA-256</span>
+        </div>
+        <div class="config-item">
+          <span class="config-key">Salt Length</span>
+          <span class="config-val mono">128-bit (16 bytes, CSPRNG)</span>
+        </div>
+        <div class="config-item">
+          <span class="config-key">Derived Key Length</span>
+          <span class="config-val mono">256-bit (32 bytes)</span>
+        </div>
+        <div class="config-item">
+          <span class="config-key">Hash Comparison</span>
+          <span class="config-val mono success-text">hmac.compare_digest (constant-time)</span>
+        </div>
+        <div class="config-item">
+          <span class="config-key">SQL Query Method</span>
+          <span class="config-val mono success-text">Parameterized (injection-safe)</span>
+        </div>
+        <div class="config-item">
+          <span class="config-key">Database</span>
+          <span class="config-val mono">SQLite 3 (local instance/)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Recommendations -->
+    <div class="card" style="margin-top: 28px;">
+      <h3 class="card-title">Security Recommendations for Production Systems</h3>
+      <div class="rec-grid">
+        <div class="rec-item">
+          <div class="rec-icon">🔐</div>
+          <div>
+            <strong>Upgrade to Argon2id</strong>
+            <p>Argon2id (winner of the 2015 Password Hashing Competition) provides configurable memory and parallelism hardness in addition to time cost, making it GPU-resistant beyond PBKDF2.</p>
+          </div>
+        </div>
+        <div class="rec-item">
+          <div class="rec-icon">⏰</div>
+          <div>
+            <strong>Calibrate Work Factor Regularly</strong>
+            <p>Increase PBKDF2 iterations as hardware improves. NIST SP 800-132 recommends ≥ 600,000 iterations for PBKDF2-SHA-256 as of 2023.</p>
+          </div>
+        </div>
+        <div class="rec-item">
+          <div class="rec-icon">🛡️</div>
+          <div>
+            <strong>Enable Multi-Factor Authentication</strong>
+            <p>Even perfect password hashing cannot protect against phishing. TOTP (RFC 6238) or FIDO2 hardware keys eliminate credential theft attacks.</p>
+          </div>
+        </div>
+        <div class="rec-item">
+          <div class="rec-icon">🔒</div>
+          <div>
+            <strong>Rate-Limit Login Endpoints</strong>
+            <p>Implement exponential backoff or account lockout after N failed attempts to mitigate online brute-force attacks.</p>
+          </div>
+        </div>
+        <div class="rec-item">
+          <div class="rec-icon">📋</div>
+          <div>
+            <strong>Audit Log Management</strong>
+            <p>Store only minimal non-sensitive authentication metadata. Never log plaintext passwords, hashes, salts, or full request payloads.</p>
+          </div>
+        </div>
+        <div class="rec-item">
+          <div class="rec-icon">🌐</div>
+          <div>
+            <strong>HTTPS Everywhere</strong>
+            <p>All authentication traffic must be encrypted in transit via TLS 1.2+ to prevent credential interception, even if password hashing is perfect.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box" style="margin-top: 24px;">
+      <strong>⚠️ Educational Purpose Disclaimer</strong><br>
+      This dashboard and its demo authentication system are for academic demonstration only.
+      Stored hashes, salts, and user records are fictional test accounts. This application is not intended for production authentication use.
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Refresh stats via AJAX every 10 seconds while on the dashboard
+async function refreshStats() {
+  const res = await fetch('/api/stats');
+  if (!res.ok) return;
+  const data = await res.json();
+  document.getElementById('kpiUsers').textContent = data.total_users || 0;
+  document.getElementById('kpiLogins').textContent = data.successful_logins || 0;
+  document.getElementById('kpiFailed').textContent = data.failed_logins || 0;
+  document.getElementById('kpiTotal').textContent = data.total_events || 0;
+  document.getElementById('cfgIterations').textContent = (data.pbkdf2_iterations || 100000).toLocaleString();
+}
+
+setInterval(refreshStats, 10000);
+</script>
+{% endblock %}

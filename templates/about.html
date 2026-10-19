@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block title %}About Cryptographic Hash Functions{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <span class="section-tag">Module 07 — Cryptography Foundations</span>
+    <h1 class="page-title">About Cryptographic Hash Functions</h1>
+    <p class="page-desc">
+      A structured educational reference covering the theory, mathematical properties, attack methodologies,
+      and modern industry standards for secure credential storage.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+
+    <!-- Core Concepts Grid -->
+    <div class="section-header">
+      <span class="section-tag">Core Theory</span>
+      <h2 class="section-title">What is a Cryptographic Hash Function?</h2>
+    </div>
+    <div class="card" style="margin-bottom: 28px;">
+      <p class="edu-body" style="font-size: 1rem; line-height: 1.8;">
+        A <strong>cryptographic hash function</strong> H is a deterministic algorithm that maps an arbitrary-length
+        byte sequence M to a fixed-length bit string D (the <em>digest</em> or <em>fingerprint</em>):
+      </p>
+      <div class="formula-display">H : {0,1}* → {0,1}<sup>n</sup></div>
+      <p class="edu-body" style="margin-top: 16px;">
+        Unlike symmetric or asymmetric encryption, hashing is a <strong>one-way trapdoor function</strong>.
+        There is no key and no inverse operation. The output is a fixed-size, opaque digest that leaks no
+        information about the original input. SHA-256 produces n = 256 bits (2⁶⁴ possible inputs map to
+        each possible output, by the pigeonhole principle).
+      </p>
+    </div>
+
+    <!-- Properties Grid -->
+    <div class="section-header">
+      <h2 class="section-title">The Four Essential Security Properties</h2>
+    </div>
+    <div class="edu-grid-4">
+      <div class="edu-prop-card">
+        <div class="prop-number">01</div>
+        <h3>Determinism</h3>
+        <p>The same input message always produces the exact same digest output. This property is required for password verification — the same password must always hash to the same value to allow comparison.</p>
+        <div class="prop-example"><code>SHA256("hello") → 2cf24dba...</code><br>Always and forever.</div>
+      </div>
+
+      <div class="edu-prop-card">
+        <div class="prop-number">02</div>
+        <h3>Pre-image Resistance</h3>
+        <p>Given only the digest D, it must be computationally infeasible to find any message M such that H(M) = D. This is the "one-way" property — hashing cannot be reversed.</p>
+        <div class="prop-example">Given <code>2cf24dba...</code><br>Cannot recover <code>"hello"</code>.</div>
+      </div>
+
+      <div class="edu-prop-card">
+        <div class="prop-number">03</div>
+        <h3>Collision Resistance</h3>
+        <p>It must be computationally infeasible to find any two distinct messages M₁ ≠ M₂ such that H(M₁) = H(M₂). MD5 is broken because practical collisions can be found in seconds.</p>
+        <div class="prop-example">For SHA-256: finding a collision requires ~2¹²⁸ operations.</div>
+      </div>
+
+      <div class="edu-prop-card">
+        <div class="prop-number">04</div>
+        <h3>Avalanche Effect</h3>
+        <p>A single-bit change in the input should cause each output bit to flip with probability ½ (Strict Avalanche Criterion). This ensures no information about the plaintext leaks through the hash.</p>
+        <div class="prop-example">Changing "a" → "b" flips ~128 of 256 output bits.</div>
+      </div>
+    </div>
+
+    <!-- Attacks Section -->
+    <div class="section-header" style="margin-top: 40px;">
+      <h2 class="section-title">Password Attack Methodologies</h2>
+    </div>
+    <div class="attack-grid">
+      <div class="attack-card">
+        <div class="attack-icon">🔨</div>
+        <h3>Brute-Force Attack</h3>
+        <p>Exhaustively tries every possible character combination of increasing length until the correct password is found. Effectiveness depends entirely on attacker throughput and password entropy.</p>
+        <div class="attack-stat">MD5: ~100 billion/sec on GPU</div>
+        <div class="attack-defense">Defense: High-entropy password + slow hash function</div>
+      </div>
+
+      <div class="attack-card">
+        <div class="attack-icon">📖</div>
+        <h3>Dictionary Attack</h3>
+        <p>Tests millions of common passwords from leaked databases (e.g., RockYou: 14 million passwords) or word lists. Extremely effective against passwords containing real words or common patterns.</p>
+        <div class="attack-stat">Cracks most common passwords in &lt;1 second</div>
+        <div class="attack-defense">Defense: Avoid dictionary words; use random passphrases</div>
+      </div>
+
+      <div class="attack-card">
+        <div class="attack-icon">🌈</div>
+        <h3>Rainbow Table Attack</h3>
+        <p>Uses precomputed tables of (plaintext → hash) pairs, trading storage space for computation time. A table covering all alphanumeric 8-char SHA-256 hashes fits on a 100TB drive.</p>
+        <div class="attack-stat">Lookup time: O(1) for unsalted hashes</div>
+        <div class="attack-defense">Defense: Unique cryptographic salt per password</div>
+      </div>
+
+      <div class="attack-card">
+        <div class="attack-icon">⏱️</div>
+        <h3>Timing Side-Channel Attack</h3>
+        <p>Exploits differences in comparison time between string operations. By measuring microsecond response time variations, an attacker can reconstruct a valid hash character-by-character.</p>
+        <div class="attack-stat">Works against naive `==` string comparison</div>
+        <div class="attack-defense">Defense: hmac.compare_digest (constant-time comparison)</div>
+      </div>
+
+      <div class="attack-card">
+        <div class="attack-icon">💉</div>
+        <h3>SQL Injection</h3>
+        <p>Injects malicious SQL syntax into form inputs to manipulate database queries. Can bypass authentication entirely: <code>username = ' OR 1=1--</code>.</p>
+        <div class="attack-stat">Can grant access to any account without knowing the password</div>
+        <div class="attack-defense">Defense: Parameterized queries (? placeholders)</div>
+      </div>
+
+      <div class="attack-card">
+        <div class="attack-icon">🎭</div>
+        <h3>Credential Stuffing</h3>
+        <p>Automatically tests credentials leaked from one service breach against other services. Succeeds because ~85% of users reuse passwords across multiple accounts.</p>
+        <div class="attack-stat">Billions of leaked credential pairs exist publicly</div>
+        <div class="attack-defense">Defense: Unique password per service + 2FA</div>
+      </div>
+    </div>
+
+    <!-- Algorithm Comparison Table -->
+    <div class="section-header" style="margin-top: 40px;">
+      <h2 class="section-title">Hash Algorithm Comparison</h2>
+    </div>
+    <div class="card">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Algorithm</th>
+              <th>Output Size</th>
+              <th>Purpose</th>
+              <th>GPU Speed</th>
+              <th>Password Use</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">MD5</td>
+              <td>128 bits</td>
+              <td>Legacy checksums</td>
+              <td class="mono danger-text">~100B / sec</td>
+              <td class="danger-text">Never — Broken</td>
+              <td><span class="status-badge danger">⚠ Deprecated</span></td>
+            </tr>
+            <tr>
+              <td class="mono">SHA-1</td>
+              <td>160 bits</td>
+              <td>Legacy signatures</td>
+              <td class="mono danger-text">~10B / sec</td>
+              <td class="danger-text">Never — Broken</td>
+              <td><span class="status-badge danger">⚠ Deprecated</span></td>
+            </tr>
+            <tr>
+              <td class="mono">SHA-256</td>
+              <td>256 bits</td>
+              <td>Data integrity, blockchain</td>
+              <td class="mono warning-text">~8B / sec</td>
+              <td class="warning-text">Alone: Unsafe</td>
+              <td><span class="status-badge info">Standard</span></td>
+            </tr>
+            <tr>
+              <td class="mono">SHA-512</td>
+              <td>512 bits</td>
+              <td>High-security integrity</td>
+              <td class="mono warning-text">~3B / sec</td>
+              <td class="warning-text">Alone: Unsafe</td>
+              <td><span class="status-badge info">Standard</span></td>
+            </tr>
+            <tr>
+              <td class="mono">PBKDF2-SHA-256</td>
+              <td>256 bits</td>
+              <td>Password storage</td>
+              <td class="mono success-text">~10K / sec *</td>
+              <td class="success-text">✓ Recommended</td>
+              <td><span class="status-badge success">Secure</span></td>
+            </tr>
+            <tr>
+              <td class="mono">bcrypt</td>
+              <td>192 bits</td>
+              <td>Password storage</td>
+              <td class="mono success-text">~2K / sec *</td>
+              <td class="success-text">✓ Recommended</td>
+              <td><span class="status-badge success">Secure</span></td>
+            </tr>
+            <tr>
+              <td class="mono">Argon2id</td>
+              <td>Configurable</td>
+              <td>Password storage (PHC winner)</td>
+              <td class="mono success-text">~100 / sec *</td>
+              <td class="success-text">✓ Best Practice</td>
+              <td><span class="status-badge success">Recommended</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">* Approximate GPU throughput at OWASP-recommended work factors. Actual speeds vary by hardware and configuration.</p>
+    </div>
+
+    <!-- About Project -->
+    <div class="card about-project-card" style="margin-top: 28px;">
+      <h2 class="card-title">Project Academic Information</h2>
+      <div class="academic-grid">
+        <div class="academic-item">
+          <span class="academic-label">Project Title</span>
+          <span class="academic-value">Password Security Analyzer Using Cryptographic Hash Functions</span>
+        </div>
+        <div class="academic-item">
+          <span class="academic-label">Student Name</span>
+          <span class="academic-value">[Student Name Placeholder]</span>
+        </div>
+        <div class="academic-item">
+          <span class="academic-label">Roll Number</span>
+          <span class="academic-value">[Roll No. Placeholder]</span>
+        </div>
+        <div class="academic-item">
+          <span class="academic-label">Faculty Supervisor</span>
+          <span class="academic-value">[Dr./Prof. Supervisor Name]</span>
+        </div>
+        <div class="academic-item">
+          <span class="academic-label">Department</span>
+          <span class="academic-value">[Dept. of Computer Science & Engineering — Cyber Security]</span>
+        </div>
+        <div class="academic-item">
+          <span class="academic-label">Institution</span>
+          <span class="academic-value">[College / University Name]</span>
+        </div>
+        <div class="academic-item">
+          <span class="academic-label">Academic Year</span>
+          <span class="academic-value">2025 – 2026</span>
+        </div>
+        <div class="academic-item">
+          <span class="academic-label">Technology Stack</span>
+          <span class="academic-value mono">Python Flask + hashlib + sqlite3 + HTML5/CSS3/JS</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Avalanche Effect Demonstration{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <span class="section-tag">Module 03 — Cryptographic Diffusion</span>
+    <h1 class="page-title">Avalanche Effect Visualizer</h1>
+    <p class="page-desc">
+      The <strong>Strict Avalanche Criterion (SAC)</strong> requires that any single-bit change in the input
+      causes each output bit to flip with a probability of exactly 50%. This property is fundamental
+      to the security of any cryptographic hash function.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="card">
+      <!-- Dual Inputs -->
+      <div class="avalanche-inputs-grid">
+        <div class="form-group">
+          <label for="avInput1" class="form-label">Input String 1 (Base)</label>
+          <input type="text" id="avInput1" class="input-field mono" value="Password123"
+                 placeholder="Base string" maxlength="512">
+        </div>
+        <div class="form-group">
+          <label for="avInput2" class="form-label">Input String 2 (Modify by 1 character)</label>
+          <input type="text" id="avInput2" class="input-field mono" value="Password124"
+                 placeholder="Slightly different string" maxlength="512">
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button class="btn btn-primary" id="runAvalancheBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Analyze Avalanche Effect
+        </button>
+        <button class="btn btn-secondary" id="autoMutateBtn" title="Auto-change last character">
+          Auto-Mutate 1 Character
+        </button>
+      </div>
+
+      <!-- Stats Banner -->
+      <div class="avalanche-stats-banner" id="avalancheStatsBanner" style="display:none;">
+        <div class="av-stat">
+          <div class="av-stat-val" id="avDiffBits">—</div>
+          <div class="av-stat-label">Bits Flipped (of 256)</div>
+        </div>
+        <div class="av-stat">
+          <div class="av-stat-val" id="avPercent">—</div>
+          <div class="av-stat-label">Avalanche %</div>
+        </div>
+        <div class="av-stat">
+          <div class="av-stat-val" id="avHexDiff">—</div>
+          <div class="av-stat-label">Hex Chars Changed (of 64)</div>
+        </div>
+        <div class="av-stat">
+          <div class="av-stat-val" id="avQuality" style="font-size: 1rem;">—</div>
+          <div class="av-stat-label">SAC Quality</div>
+        </div>
+      </div>
+
+      <!-- Side-by-Side Hash Display -->
+      <div id="avHashDisplay" style="display:none; margin-top: 24px;">
+        <div class="grid-2">
+          <div>
+            <div class="hash-stream-label">Hash 1 — <code id="avHashLabel1"></code></div>
+            <div class="hex-stream" id="hexStream1"></div>
+          </div>
+          <div>
+            <div class="hash-stream-label">Hash 2 — <code id="avHashLabel2"></code></div>
+            <div class="hex-stream" id="hexStream2"></div>
+          </div>
+        </div>
+        <div class="diff-legend">
+          <span class="diff-legend-item"><span class="diff-swatch diff-char"></span> Changed hex nibble</span>
+          <span class="diff-legend-item"><span class="diff-swatch same-char"></span> Unchanged nibble</span>
+        </div>
+      </div>
+
+      <!-- 256-Bit Matrix Visualization -->
+      <div id="bitMatrixSection" style="display:none; margin-top: 28px;">
+        <div class="matrix-header">
+          <strong>256-Bit Diffusion Matrix</strong>
+          <span class="matrix-note">Each cell = 1 bit. <span class="flipped-legend">Cyan</span> = flipped by 1-char change</span>
+        </div>
+        <div class="bit-grid" id="bitGrid" aria-label="256-bit diffusion matrix" role="img"></div>
+      </div>
+    </div>
+
+    <!-- Educational Callout -->
+    <div class="card" style="margin-top: 24px;">
+      <div class="grid-3">
+        <div class="edu-fact-card">
+          <div class="edu-fact-icon">📐</div>
+          <h4>Strict Avalanche Criterion</h4>
+          <p>Formally defined by Webster & Tavares (1985). A function satisfies SAC if complementing any single input bit changes each output bit with probability ½.</p>
+        </div>
+        <div class="edu-fact-card">
+          <div class="edu-fact-icon">🎲</div>
+          <h4>Why ~50% is Ideal</h4>
+          <p>If fewer bits flip, the hash leaks information about the input. If more flip systematically, it creates a predictable pattern attackers can exploit.</p>
+        </div>
+        <div class="edu-fact-card">
+          <div class="edu-fact-icon">🔑</div>
+          <h4>Security Implication</h4>
+          <p>This property ensures that even if an attacker knows most of your password, they gain zero information about the remaining characters from the hash.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function runAvalanche() {
+  const i1 = document.getElementById('avInput1').value;
+  const i2 = document.getElementById('avInput2').value;
+
+  if (!i1 || !i2) {
+    showToast('Enter text in both input fields.', 'warning');
+    return;
+  }
+
+  const res = await apiPost('/api/avalanche', { input1: i1, input2: i2 });
+  if (!res) return;
+
+  // Stats Banner
+  document.getElementById('avDiffBits').textContent = res.diff_bits;
+  document.getElementById('avPercent').textContent = res.avalanche_percentage + '%';
+  document.getElementById('avHexDiff').textContent = `${res.diff_hex_chars} / ${res.total_hex_chars}`;
+  const qualityEl = document.getElementById('avQuality');
+  qualityEl.textContent = res.quality_rating.split('(')[0].trim();
+  qualityEl.style.color = res.quality_badge === 'success' ? '#34d399'
+                         : res.quality_badge === 'info' ? '#38bdf8' : '#fbbf24';
+  document.getElementById('avalancheStatsBanner').style.display = 'flex';
+
+  // Hash labels
+  document.getElementById('avHashLabel1').textContent = `"${i1.slice(0,20)}${i1.length>20?'…':''}"`;
+  document.getElementById('avHashLabel2').textContent = `"${i2.slice(0,20)}${i2.length>20?'…':''}"`;
+
+  // Hex Char Diff Streams
+  const stream1 = document.getElementById('hexStream1');
+  const stream2 = document.getElementById('hexStream2');
+  stream1.innerHTML = '';
+  stream2.innerHTML = '';
+
+  res.char_diff1.forEach(c => {
+    const span = document.createElement('span');
+    span.className = 'hex-char ' + (c.diff ? 'diff-char' : 'same-char');
+    span.textContent = c.char;
+    stream1.appendChild(span);
+  });
+  res.char_diff2.forEach(c => {
+    const span = document.createElement('span');
+    span.className = 'hex-char ' + (c.diff ? 'diff-char' : 'same-char');
+    span.textContent = c.char;
+    stream2.appendChild(span);
+  });
+
+  document.getElementById('avHashDisplay').style.display = 'block';
+
+  // 256-Bit Matrix
+  const grid = document.getElementById('bitGrid');
+  grid.innerHTML = '';
+  res.bit_matrix.forEach(bit => {
+    const cell = document.createElement('div');
+    cell.className = 'bit-cell ' + (bit.flipped ? 'flipped' : '');
+    cell.title = `Bit ${bit.index}: H1=${bit.bit1} H2=${bit.bit2} ${bit.flipped ? '(FLIPPED)' : '(same)'}`;
+    grid.appendChild(cell);
+  });
+
+  document.getElementById('bitMatrixSection').style.display = 'block';
+}
+
+document.getElementById('runAvalancheBtn').addEventListener('click', runAvalanche);
+
+document.getElementById('autoMutateBtn').addEventListener('click', function() {
+  const val = document.getElementById('avInput1').value || 'Password123';
+  const last = val.charCodeAt(val.length - 1);
+  document.getElementById('avInput1').value = val;
+  document.getElementById('avInput2').value = val.slice(0, -1) + String.fromCharCode(last ^ 1);
+  showToast('Mutated exactly 1 character — now click Analyze.');
+});
+
+// Auto-run with default values on load
+window.addEventListener('DOMContentLoaded', runAvalanche);
+</script>
+{% endblock %}
