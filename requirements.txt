@@ -5,3 +5,4 @@ Jinja2==3.1.6
 
 # Note: Cryptographic modules (hashlib, secrets, hmac) and database (sqlite3)
 # are part of the standard Python library and require no external installation.
+gunicorn==23.0.0
